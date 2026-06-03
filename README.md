@@ -7,7 +7,7 @@
 [![Paper](https://img.shields.io/badge/ICML%202026-Paper-red)](https://arxiv.org/abs/2502.11034)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../../LICENSE)
 [![Python](https://img.shields.io/badge/Python-%3E%3D3.10-yellow)](https://www.python.org/)
-[![PaddlePaddle](https://img.shields.io/badge/Paddle-nightly%203.4-orange)](https://www.paddlepaddle.org.cn/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-%3E%3D2.1.0-orange)](https://pytorch.org/)
 
 </div>
 
@@ -37,23 +37,23 @@ AdaGC introduces negligible memory overhead, reduces communication compared with
 ## Method
 
 <p align="center">
-  <img src="./assets/adagc.png" width="45%" alt="RRAttention Overview">
+  <img src="./assets/adagc.png" width="45%" alt="AdaGC Overview">
 </p>
 
 AdaGC stabilizes LLM pretraining through tensor-wise adaptive gradient clipping. Instead of applying a single global threshold to all gradients, AdaGC maintains an EMA of each tensor's historical gradient norm and uses it as a local adaptive reference for clipping.
 
 For the $i$-th tensor, AdaGC performs:
 
-$$
-g_{t,i} \leftarrow h_{t,i} g_{t,i}, \quad
-h_{t,i} = \min\left\{1.0, \frac{\lambda_{\text{rel}}\gamma_{t-1,i}}{\|g_{t,i}\|}\right\},
-$$
+```math
+g_{t,i} \leftarrow h_{t,i} g_{t,i}, \qquad
+h_{t,i} = \min\left\{1.0, \frac{\lambda_{\mathrm{rel}}\gamma_{t-1,i}}{\lVert g_{t,i}\rVert}\right\}
+```
 
 where the EMA state is updated as:
 
-$$
-\gamma_{t,i} = \beta \gamma_{t-1,i} + (1-\beta)\|g_{t,i}\|.
-$$
+```math
+\gamma_{t,i} = \beta \gamma_{t-1,i} + (1-\beta)\lVert g_{t,i}\rVert
+```
 
 | Stage | Name | Description |
 |---|---|---|
