@@ -5,15 +5,15 @@
 ### Enhancing LLM Pretraining Stability via Adaptive Gradient Clipping
 
 [![Paper](https://img.shields.io/badge/ICML%202026-Paper-red)](https://arxiv.org/abs/2502.11034)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../../LICENSE)
-[![Python](https://img.shields.io/badge/Python-%3E%3D3.10-yellow)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+[![Python](https://img.shields.io/badge/Python-%3E%3D3.8-yellow)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-%3E%3D2.1.0-orange)](https://pytorch.org/)
 
 </div>
 
 ---
 
-## Overview
+## 🎬 Overview
 
 Loss spikes are a common obstacle in large-scale LLM pretraining. Although they may be triggered by diverse factors such as data outliers, numerical precision issues, hardware faults, or optimizer hyperparameters, they often share a common consequence: abnormal gradients contaminate optimizer states and lead to unstable updates.
 
@@ -21,11 +21,10 @@ Loss spikes are a common obstacle in large-scale LLM pretraining. Although they 
 
 AdaGC introduces negligible memory overhead, reduces communication compared with GlobalGC in hybrid-parallel training, and has been validated on dense and MoE LLMs including Llama-2, Qwen3, Mixtral, and ERNIE.
 
-> *Paddle implementation is available at https://github.com/PaddlePaddle/Paddle/pull/79041*
-
 ## 🔔 News
 
-- **[2026.06.03]** PyTorch implementation of AdaGC, along with example scripts for GPT-2/Llama-2/Qwen3/Mixtral pretraining is now available at this repository.
+- **[2026.06.03]** The PyTorch implementation of AdaGC, together with example pretraining scripts for GPT-2, Llama-2, Qwen3, and Mixtral, is now available in this repository.
+- **[2026.06.01]** The PaddlePaddle implementation of AdaGC has been merged into the develop branch of PaddlePaddle. See PaddlePaddle PR [#79041](https://github.com/PaddlePaddle/Paddle/pull/79041) for details.
 - **[2026.05.01]** 🎉 Our paper has been accepted by **ICML 2026**!
 
 
@@ -34,7 +33,7 @@ AdaGC introduces negligible memory overhead, reduces communication compared with
 - [ ] Release PaddlePaddle evaluation code
 - [x] Release PyTorch evaluation code
 
-## Method
+## 📖 Method
 
 <p align="center">
   <img src="./assets/adagc.png" width="45%" alt="AdaGC Overview">
@@ -64,67 +63,83 @@ where the EMA state is updated as:
 Compared with GlobalGC, AdaGC provides temporal adaptivity, tensor-wise locality, and lower communication overhead in hybrid-parallel distributed training.
 
 ---
-## Quick Start
+
+## 🚀 Quick Start
 
 ### Environment Setup
 
-For complete installation instructions, please refer to the official documentation of each framework.
+Please follow the official installation instructions of the corresponding framework and repository to set up the environment. Make sure that the required dependencies for [Megatron-LM](https://github.com/nvidia/megatron-lm) or [Megatron-LLaMA](https://github.com/alibaba/Megatron-LLaMA) are properly installed before running the training scripts.
+
+---
 
 ### Clone the Repositories
-Clone the specific versions of the `Megatron-LM` and `Megatron-LLaMA` repositories:
+
+We provide patches for specific versions of `Megatron-LLaMA` and `Megatron-LM`. Please check out the exact commit before applying the corresponding patch.
+
+#### GPT-345M and Llama-2 Tiny / 1.3B / 7B / 13B / 70B
 
 ```bash
-# GPT-2 345M model pretraining
-git clone https://github.com/NVIDIA/Megatron-LM
-mv Megatron-LM Megatron-LM-GPT
-cd Megatron-LM-GPT
-git checkout feac76a79148622d8f2a45d46c08a972a24784a3
-# check whether the patch is available
-git apply --check path/to/megatron-gpt2.patch
-# apply our provided patch
-git apply path/to/megatron-gpt2.patch
-
-
-# Llama-2 tiny/1.3B/7B/13B/70B model pretraining
-# clone the Megatron-LLaMA repository
+# Clone Megatron-LLaMA
 git clone https://github.com/alibaba/Megatron-LLaMA
 cd Megatron-LLaMA
+
+# Checkout the tested commit
 git checkout 25306de84d300b47a3973cd798463ae7d09019bd
-# check whether the patch is available
+
+# Check whether the patch can be applied
 git apply --check path/to/megatron-llama.patch
-# apply our provided patch
+
+# Apply the provided patch
 git apply path/to/megatron-llama.patch
+```
 
+#### Mixtral 8×1B
 
-# Mixtral 8x1B model pretraining
-# clone the Megatron-LM repository
+```bash
+# Clone Megatron-LM
 git clone https://github.com/NVIDIA/Megatron-LM
-mv Megatron-LM Megatron-LM-Mixtral
-cd Megatron-LM-Mixtral
+cd Megatron-LM
+
+# Checkout the tested commit
 git checkout 378259df0e12327992b1393f86cf7427526503bf
-# check whether the patch is available
+
+# Check whether the patch can be applied
 git apply --check path/to/megatron-mixtral.patch
-# apply our provided patch
+
+# Apply the provided patch
 git apply path/to/megatron-mixtral.patch
 ```
 
-### Download C4-en Dataset
+*If `git apply` reports trailing whitespace warnings, they are usually harmless. To suppress these warnings, you can use:*
+```bash
+git apply --whitespace=nowarn path/to/patch
+```
 
-Download and convert the dataset format using Hugging Face Datasets:
+---
+
+### Download the C4-en Dataset
+
+Download and convert the `C4` English dataset using Hugging Face Datasets:
 
 ```python
 from datasets import load_dataset
+
 c4 = load_dataset("c4", "en")
 c4["train"].to_json("c4_en_train.jsonl")
 c4["validation"].to_json("c4_en_valid.jsonl")
 ```
 
+---
+
 ### Data Preprocessing
 
-#### Preprocessing for GPT-2 Format
-Run the following script to preprocess c4_en_train.jsonl for Megatron-LM in GPT-2 345M experiments:
+#### GPT-2 Format
+
+Use the following command to preprocess `c4_en_train.jsonl` for GPT-345M experiments:
+
 ```bash
-cd Megatron-LM-GPT
+cd Megatron-LLaMA
+
 python tools/preprocess_data.py \
     --input path/to/c4_en_train.jsonl \
     --output-prefix data/meg-c4-en-train \
@@ -135,10 +150,13 @@ python tools/preprocess_data.py \
     --workers 12
 ```
 
-#### Preprocessing for Llama-2 Format
-Data preprocessing for LLaMA models (applicable to both Tiny, 7B, 13B, and 70B models):
+#### Llama-2 Format
+
+Use the following command to preprocess data for Llama-2 models. This preprocessing pipeline is applicable to Llama-2 Tiny, 1.3B, 7B, 13B, and 70B models. Please update `--output-prefix` and `--tokenizer-name-or-path` according to the model scale you use.
+
 ```bash
 cd Megatron-LLaMA
+
 python tools/preprocess_data.py \
     --input path/to/c4_en_train.jsonl \
     --output-prefix data/llama-7b/meg-llama-7b-c4-en-train \
@@ -149,22 +167,30 @@ python tools/preprocess_data.py \
     --workers 12
 ```
 
+---
+
 ### Model Training
 
-Run the corresponding training script:
+Before running the training scripts, please make sure that the `dataset paths`, `tokenizer paths`, `checkpoint paths`, and `distributed training configurations` are correctly set in the corresponding scripts.
 
-#### GPT-2 345M model
+#### GPT-345M
+
 ```bash
-cd Megatron-LM-GPT
-# modify the dataset path in the script before running
+cd Megatron-LLaMA
+
+# Please modify DATA_PATH in the script before running.
+# Example:
 # DATA_PATH=path/to/meg-c4-en-train_text_document
-bash run_pretrain_gpt2_345m.sh
+
+bash examples/GPT/run_pretrain_gpt2_345m.sh
 ```
 
-#### Llama-2 series model
+#### Llama-2 Series
+
 ```bash
-# Llama-2 tiny
 cd Megatron-LLaMA
+
+# Llama-2 Tiny
 bash examples/LLaMA/LLaMA_tiny_standalone.sh
 
 # Llama-2 1.3B
@@ -180,21 +206,25 @@ bash examples/LLaMA/LLaMA_13_standalone.sh
 bash examples/LLaMA/LLaMA_70B_dp8_tp8_pp8.sh
 ```
 
-#### Qwen3 1.7B model
+#### Qwen3-1.7B
+
 ```bash
 cd Megatron-LLaMA
+
 bash examples/Qwen/Qwen3_1p7B.sh
 ```
 
-#### Mixtral 8x1B
+#### Mixtral 8×1B
+
 ```bash
-cd Megatron-LM-Mixtral
+cd Megatron-LM
+
 bash examples/mixtral/train_mixtral_8x1b_distributed.sh
 ```
 
 ---
 
-## Citation
+## 📚 Citation
 
 If you find this work useful, please cite our paper:
 
